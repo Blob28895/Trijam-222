@@ -288,7 +288,7 @@ GameObject:
   - component: {fileID: 693668025}
   - component: {fileID: 693668027}
   m_Layer: 5
-  m_Name: RawImage
+  m_Name: Painting
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -362,6 +362,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mouseCursor: {fileID: 2800000, guid: 51fd7a70db0ffcc46944e9a0c0af83fe, type: 3}
+  brushSize: 20
+  brushColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &1998263234
 GameObject:
   m_ObjectHideFlags: 0

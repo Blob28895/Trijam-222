@@ -6,6 +6,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
 {
     public Texture2D mouseCursor;
     public int brushSize = 5;
+    public Color brushColor = Color.black;
 
     private Texture2D canvasTexture;
     private RectTransform canvasRect;
@@ -22,11 +23,21 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         Cursor.SetCursor(mouseCursor, Vector2.zero, CursorMode.Auto);
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            GetPercentageDrawn();
+        }
+    }
+
+    // implementing method from IPointerDownHandler
     public void OnPointerDown(PointerEventData eventData)
     {
         previousPosition = eventData.position;
     }
 
+    // implementing method from IDragHandler
     public void OnDrag(PointerEventData eventData)
     {
         Vector2 currentPosition = eventData.position - new Vector2(canvasRect.position.x, canvasRect.position.y);
@@ -34,14 +45,42 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         previousPosition = currentPosition;
     }
 
+    public float GetPercentageDrawn()
+    {
+        // this counts all pixels that are not white as drawn. in the
+        int totalPixels = canvasTexture.width * canvasTexture.height;
+        int drawnPixels = 0;
+
+        for (int x = 0; x < canvasTexture.width; x++)
+        {
+            for (int y = 0; y < canvasTexture.height; y++)
+            {
+                if (canvasTexture.GetPixel(x, y) == brushColor)
+                    drawnPixels++;
+            }
+        }
+
+        Debug.Log("Percentage drawn: " + (drawnPixels / (float)totalPixels) * 100 + "%");
+        return (drawnPixels / (float)totalPixels) * 100;
+    }
+
     private void DrawOnCanvas(Vector2 startPosition, Vector2 endPosition)
     {
         Vector2Int startPixelPosition = WorldToPixelCoordinates(startPosition);
         Vector2Int endPixelPosition = WorldToPixelCoordinates(endPosition);
 
-        DrawLine(startPixelPosition, endPixelPosition, Color.black);
+        DrawLine(startPixelPosition, endPixelPosition, brushColor);
 
         canvasTexture.Apply();
+    }
+
+    private Vector2Int WorldToPixelCoordinates(Vector2 worldPosition)
+    {
+        Vector2 localPosition = worldPosition - new Vector2(canvasRect.position.x, canvasRect.position.y);
+        return new Vector2Int(
+            Mathf.FloorToInt(localPosition.x / canvasRect.rect.width * canvasTexture.width),
+            Mathf.FloorToInt(localPosition.y / canvasRect.rect.height * canvasTexture.height)
+        );
     }
 
     // Bresenham's line algorithm (i stole this from the internet)
@@ -81,15 +120,5 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
                 startPos.y += sy;
             }
         }
-    }
-
-
-    private Vector2Int WorldToPixelCoordinates(Vector2 worldPosition)
-    {
-        Vector2 localPosition = worldPosition - new Vector2(canvasRect.position.x, canvasRect.position.y);
-        return new Vector2Int(
-            Mathf.FloorToInt(localPosition.x / canvasRect.rect.width * canvasTexture.width),
-            Mathf.FloorToInt(localPosition.y / canvasRect.rect.height * canvasTexture.height)
-        );
     }
 }
