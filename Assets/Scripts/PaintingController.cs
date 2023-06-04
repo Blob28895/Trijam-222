@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
+    public Texture2D mouseCursor;
+    public int brushSize = 5;
+
     private Texture2D canvasTexture;
     private RectTransform canvasRect;
     private RawImage rawImage;
@@ -13,8 +16,10 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     {
         rawImage = GetComponent<RawImage>();
         canvasRect = rawImage.rectTransform;
-        canvasTexture = new Texture2D(256, 256);
+        canvasTexture = new Texture2D(800, 800);
         rawImage.texture = canvasTexture;
+
+        Cursor.SetCursor(mouseCursor, Vector2.zero, CursorMode.Auto);
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -34,18 +39,50 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         Vector2Int startPixelPosition = WorldToPixelCoordinates(startPosition);
         Vector2Int endPixelPosition = WorldToPixelCoordinates(endPosition);
 
-        Vector2Int pixelSize = endPixelPosition - startPixelPosition;
-        Vector2Int direction = pixelSize;
-        int steps = Mathf.CeilToInt(pixelSize.magnitude);
-
-        for (int i = 0; i <= steps; i++)
-        {
-            Vector2Int pixelPosition = startPixelPosition + (direction * i);
-            canvasTexture.SetPixel(pixelPosition.x, pixelPosition.y, Color.black);
-        }
+        DrawLine(startPixelPosition, endPixelPosition, Color.black);
 
         canvasTexture.Apply();
     }
+
+    // Bresenham's line algorithm (i stole this from the internet)
+    private void DrawLine(Vector2Int startPos, Vector2Int endPos, Color color)
+    {
+        int dx = Mathf.Abs(endPos.x - startPos.x);
+        int dy = Mathf.Abs(endPos.y - startPos.y);
+        int sx = (startPos.x < endPos.x) ? 1 : -1;
+        int sy = (startPos.y < endPos.y) ? 1 : -1;
+        int err = dx - dy;
+
+        int halfBrushSize = brushSize / 2;
+
+        while (true)
+        {
+            for (int x = -halfBrushSize; x <= halfBrushSize; x++)
+            {
+                for (int y = -halfBrushSize; y <= halfBrushSize; y++)
+                {
+                    Vector2Int brushPixelPosition = new Vector2Int(startPos.x + x, startPos.y + y);
+                    canvasTexture.SetPixel(brushPixelPosition.x, brushPixelPosition.y, color);
+                }
+            }
+
+            if (startPos.x == endPos.x && startPos.y == endPos.y)
+                break;
+
+            int e2 = 2 * err;
+            if (e2 > -dy)
+            {
+                err -= dy;
+                startPos.x += sx;
+            }
+            if (e2 < dx)
+            {
+                err += dx;
+                startPos.y += sy;
+            }
+        }
+    }
+
 
     private Vector2Int WorldToPixelCoordinates(Vector2 worldPosition)
     {
