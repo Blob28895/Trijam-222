@@ -14,12 +14,17 @@ public class Scoring : MonoBehaviour
     public TextMeshProUGUI scoreInt;
 
     private int score = 0;
+    public static int highScore = 0;
 
     public void updateScore(float paintedPercentage)
     {
         addWallScore(paintedPercentage);
 
         scoreInt.text = score.ToString();
+        if(score > highScore)
+		{
+            highScore = score;
+		}
     }
 
     private void addWallScore(float paintedPercentage)

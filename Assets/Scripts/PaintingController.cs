@@ -26,9 +26,11 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     private int textureHeight = 800;
 
     private float wallDrawnPercentage;
+    public static bool ableToPaint;
 
     private void Start()
     {
+        ableToPaint = true;
         rawImage = GetComponent<RawImage>();
         canvasRect = rawImage.rectTransform;
         canvasTexture = new Texture2D(textureWidth, textureHeight);
@@ -102,8 +104,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            wallDrawnPercentage = GetPercentageDrawn();
-            scoring.updateScore(wallDrawnPercentage);
+            submitWall();
         }
     }
 
@@ -120,7 +121,11 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         DrawOnCanvas(previousPosition, currentPosition);
         previousPosition = currentPosition;
     }
-
+    public void submitWall()
+	{
+        wallDrawnPercentage = GetPercentageDrawn();
+        scoring.updateScore(wallDrawnPercentage);
+    }
     public float GetPercentageDrawn()
     {
         // this counts all pixels that are not white as drawn. in the
@@ -142,6 +147,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
 
     private void DrawOnCanvas(Vector2 startPosition, Vector2 endPosition)
     {
+        if (!ableToPaint) { return; }
         Vector2Int startPixelPosition = WorldToPixelCoordinates(startPosition);
         Vector2Int endPixelPosition = WorldToPixelCoordinates(endPosition);
 

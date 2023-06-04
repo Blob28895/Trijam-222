@@ -21,16 +21,21 @@ public class CountdownTimer : MonoBehaviour
 
     private void Update()
     {
-        if (!timerStarted)
+        if (timerEnded)
+        {
+            setTimerToTime(0, 0);
             return;
+        }
 
         currentTime -= Time.deltaTime;
 
         UpdateTimerText();
 
-        if (currentTime <= 0f)
+        if (currentTime <= 0f /*&& !timerEnded*/)
         {
             timerEnded = true;
+            GameObject.FindGameObjectWithTag("Painting").GetComponent<PaintingController>().submitWall();
+            GameObject.FindGameObjectWithTag("Game Controller").GetComponent<GameController>().endGame();
         }
     }
 
@@ -59,4 +64,9 @@ public class CountdownTimer : MonoBehaviour
 	{
         return timerStarted;
 	}
+
+    private void setTimerToTime(int minutes, int seconds)
+	{
+        timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+    }
 }
