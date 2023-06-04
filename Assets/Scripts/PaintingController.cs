@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
@@ -8,11 +9,13 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     [SerializeField] private Texture2D mouseCursor;
     [SerializeField] private int brushSize = 5;
     [SerializeField] private Color brushColor = Color.black;
+    [SerializeField] private List<GameObject> obstacles;
 
     private Texture2D canvasTexture;
     private RectTransform canvasRect;
     private RawImage rawImage;
     private Vector2 previousPosition;
+    private Color backgroundColor;
 
     private int textureWidth = 800;
     private int textureHeight = 800;
@@ -23,6 +26,8 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         canvasRect = rawImage.rectTransform;
         canvasTexture = new Texture2D(textureWidth, textureHeight);
         rawImage.texture = canvasTexture;
+
+        backgroundColor = canvasTexture.GetPixel(0, 0);
 
         mainCamera = Camera.main;
 
@@ -42,13 +47,13 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
             Texture2D obstacleTexture = obstacleRenderer.sprite.texture;
 
             // Determine the position on the texture
-            Vector2 texturePosition = CalculateTexturePosition(obstacle.transform.position, textureWidth, textureHeight);
+            Vector2 texturePosition = new Vector2(obstacle.transform.position.x, obstacle.transform.position.y);
 
             // Determine the scaling factors for the obstacle
-            float scaleX = obstacle.transform.localScale.x * (float)obstacleTexture.width / Screen.width;
-            float scaleY = obstacle.transform.localScale.y * (float)obstacleTexture.height / Screen.height;
+            float scaleX = obstacle.transform.localScale.x * (float)obstacleTexture.width / Screen.width + 0.1f;
+            float scaleY = obstacle.transform.localScale.y * (float)obstacleTexture.height / Screen.height + 0.1f;
 
-            texturePosition += new Vector2((textureWidth / 2) - (obstacleTexture.width * scaleX/2), (textureHeight / 2) - (obstacleTexture.height * scaleY/2));
+            texturePosition += new Vector2((textureWidth / 2) - (obstacleTexture.width * scaleX / 2), (textureHeight / 2) - (obstacleTexture.height * scaleY / 2));
 
             // Iterate over the pixels of the obstacle's texture
             for (int x = 0; x < obstacleTexture.width; x++)
@@ -72,25 +77,8 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
             }
         }
 
-    // Apply the changes to the texture
-    canvasTexture.Apply();
-    }
-
-    private Vector2Int CalculateTexturePosition(Vector3 worldPosition, int textureWidth, int textureHeight)
-    {
-        // Convert the world position to texture coordinates
-        float normalizedX = (worldPosition.x / Screen.width) * textureWidth;
-        float normalizedY = (worldPosition.y / Screen.height) * textureHeight;
-
-        // Convert the normalized coordinates to integer texture coordinates
-        int x = Mathf.RoundToInt(normalizedX);
-        int y = Mathf.RoundToInt(normalizedY);
-
-        // Clamp the coordinates to ensure they are within the texture bounds
-        x = Mathf.Clamp(x, 0, textureWidth - 1);
-        y = Mathf.Clamp(y, 0, textureHeight - 1);
-
-        return new Vector2Int(x, y);
+        // Apply the changes to the texture
+        canvasTexture.Apply();
     }
 
     private bool IsWithinTextureBounds(Vector2Int textureCoordinate, Texture2D texture)
@@ -145,7 +133,6 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
 
     private void DrawOnCanvas(Vector2 startPosition, Vector2 endPosition)
     {
-        CheckForGameObjectObstacles();
         Vector2Int startPixelPosition = WorldToPixelCoordinates(startPosition);
         Vector2Int endPixelPosition = WorldToPixelCoordinates(endPosition);
 
@@ -181,6 +168,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
                 for (int y = -halfBrushSize; y <= halfBrushSize; y++)
                 {
                     Vector2Int brushPixelPosition = new Vector2Int(startPos.x + x, startPos.y + y);
+                    // CheckForObstacles(brushPixelPosition.x, brushPixelPosition.y);
                     canvasTexture.SetPixel(brushPixelPosition.x, brushPixelPosition.y, color);
                 }
             }
@@ -202,14 +190,13 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         }
     }
 
-    private bool CheckForGameObjectObstacles()
-    {
-        RaycastHit2D hitInfo = Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, 
-                                                    Mathf.Infinity, LayerMask.GetMask("Obstacle"));
 
-        if(hitInfo.collider != null)
+    // in order for this to work, the background color needs to be different from brush and obstacle color
+    private bool CheckForObstacles(int x, int y)
+    {
+        if(canvasTexture.GetPixel(x, y) != backgroundColor || canvasTexture.GetPixel(x, y) != brushColor)
         {
-            Debug.Log("Obstacle hit!");
+            // Debug.Log("Found obstacle!!!");
             return true;
         }
         return false;
