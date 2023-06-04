@@ -5,24 +5,20 @@ using System.Collections.Generic;
 
 public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
-    [System.Serializable]
-    public class PointThreshold
-    {
-        public float percentage;
-        public int score;
-    }
+
 
     [SerializeField] private Camera mainCamera;
     [SerializeField] private Texture2D mouseCursor;
     [SerializeField] private int brushSize = 5;
     [SerializeField] private Color brushColor = Color.black;
     [SerializeField] private List<GameObject> obstacles;
-    [SerializeField] private PointThreshold[] pointThresholds;
+
 
 
     private Texture2D canvasTexture;
     private RectTransform canvasRect;
     private RawImage rawImage;
+    private Scoring scoring;
     private Vector2 previousPosition;
     private Color backgroundColor;
 
@@ -30,7 +26,6 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     private int textureHeight = 800;
 
     private float wallDrawnPercentage;
-    private int totalScore = 0;
 
     private void Start()
     {
@@ -38,6 +33,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         canvasRect = rawImage.rectTransform;
         canvasTexture = new Texture2D(textureWidth, textureHeight);
         rawImage.texture = canvasTexture;
+        scoring = GetComponent<Scoring>();
 
         backgroundColor = canvasTexture.GetPixel(0, 0);
 
@@ -107,7 +103,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         if (Input.GetKeyDown(KeyCode.Space))
         {
             wallDrawnPercentage = GetPercentageDrawn();
-            updateScore();
+            scoring.updateScore(wallDrawnPercentage);
         }
     }
 
@@ -215,22 +211,5 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         return false;
     }
 
-	private void updateScore()
-	{
-        addWallScore();
 
-        Debug.Log("Score: " + totalScore.ToString());
-	}
-
-    private void addWallScore()
-	{
-        for(int i = pointThresholds.Length - 1; i > -1; --i)
-		{
-            if(wallDrawnPercentage >= pointThresholds[i].percentage)
-			{
-                totalScore += pointThresholds[i].score;
-                break;
-			}
-		}
-	}
 }
