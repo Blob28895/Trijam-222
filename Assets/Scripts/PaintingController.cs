@@ -5,11 +5,20 @@ using System.Collections.Generic;
 
 public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
+    [System.Serializable]
+    public class PointThreshold
+    {
+        public float percentage;
+        public int score;
+    }
+
     [SerializeField] private Camera mainCamera;
     [SerializeField] private Texture2D mouseCursor;
     [SerializeField] private int brushSize = 5;
     [SerializeField] private Color brushColor = Color.black;
     [SerializeField] private List<GameObject> obstacles;
+    [SerializeField] private PointThreshold[] pointThresholds;
+
 
     private Texture2D canvasTexture;
     private RectTransform canvasRect;
@@ -19,6 +28,9 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
 
     private int textureWidth = 800;
     private int textureHeight = 800;
+
+    private float wallDrawnPercentage;
+    private int totalScore = 0;
 
     private void Start()
     {
@@ -94,7 +106,8 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            GetPercentageDrawn();
+            wallDrawnPercentage = GetPercentageDrawn();
+            updateScore();
         }
     }
 
@@ -201,4 +214,23 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         }
         return false;
     }
+
+	private void updateScore()
+	{
+        addWallScore();
+
+        Debug.Log("Score: " + totalScore.ToString());
+	}
+
+    private void addWallScore()
+	{
+        for(int i = pointThresholds.Length - 1; i > -1; --i)
+		{
+            if(wallDrawnPercentage >= pointThresholds[i].percentage)
+			{
+                totalScore += pointThresholds[i].score;
+                break;
+			}
+		}
+	}
 }
