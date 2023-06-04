@@ -4,9 +4,10 @@ using UnityEngine.UI;
 
 public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
-    public Texture2D mouseCursor;
-    public int brushSize = 5;
-    public Color brushColor = Color.black;
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private Texture2D mouseCursor;
+    [SerializeField] private int brushSize = 5;
+    [SerializeField] private Color brushColor = Color.black;
 
     private Texture2D canvasTexture;
     private RectTransform canvasRect;
@@ -19,6 +20,8 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         canvasRect = rawImage.rectTransform;
         canvasTexture = new Texture2D(800, 800);
         rawImage.texture = canvasTexture;
+
+        mainCamera = Camera.main;
 
         Cursor.SetCursor(mouseCursor, Vector2.zero, CursorMode.Auto);
     }
@@ -66,6 +69,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
 
     private void DrawOnCanvas(Vector2 startPosition, Vector2 endPosition)
     {
+        CheckForGameObjectObstacles();
         Vector2Int startPixelPosition = WorldToPixelCoordinates(startPosition);
         Vector2Int endPixelPosition = WorldToPixelCoordinates(endPosition);
 
@@ -120,5 +124,18 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
                 startPos.y += sy;
             }
         }
+    }
+
+    private bool CheckForGameObjectObstacles()
+    {
+        RaycastHit2D hitInfo = Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, 
+                                                    Mathf.Infinity, LayerMask.GetMask("Obstacle"));
+
+        if(hitInfo.collider != null)
+        {
+            Debug.Log("Obstacle hit!");
+            return true;
+        }
+        return false;
     }
 }
