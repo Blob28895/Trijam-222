@@ -14,17 +14,6 @@ public class Scoring : MonoBehaviour
     public TextMeshProUGUI scoreInt;
 
     private int score = 0;
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
 
     public void updateScore(float paintedPercentage)
     {
