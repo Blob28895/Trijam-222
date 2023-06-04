@@ -12,7 +12,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     [SerializeField] private int brushSize = 5;
     [SerializeField] private Color brushColor = Color.black;
     [SerializeField] private List<GameObject> walls;
-    /*[SerializeField]*/ private List<GameObject> obstacles = new List<GameObject>();
+    [SerializeField] private List<GameObject> obstacles = new List<GameObject>();
 
 
 
@@ -124,11 +124,13 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         DrawOnCanvas(previousPosition, currentPosition);
         previousPosition = currentPosition;
     }
+
     public void submitWall()
 	{
         wallDrawnPercentage = GetPercentageDrawn();
         scoring.updateScore(wallDrawnPercentage);
     }
+
     public void nextWall()
 	{
         if(wallIndex == walls.Count - 1)
@@ -139,9 +141,23 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         walls[wallIndex].SetActive(false);
         wallIndex++;
         walls[wallIndex].SetActive(true);
+
+        ClearObstacles();
         populateObstacles();
-        //TODO: Erase old obstacles and paint, then draw the new obstacles on
+        DrawObstaclesOnTexture();
 	}
+
+    private void ClearObstacles()
+    {
+        for (int x = 0; x < canvasTexture.width; x++)
+        {
+            for (int y = 0; y < canvasTexture.height; y++)
+            {
+                canvasTexture.SetPixel(x, y, backgroundColor);
+            }
+        }
+    }
+
     public void populateObstacles()
 	{
         obstacles.Clear();
