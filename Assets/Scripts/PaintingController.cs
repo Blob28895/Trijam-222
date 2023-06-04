@@ -11,7 +11,8 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
     [SerializeField] private Texture2D mouseCursor;
     [SerializeField] private int brushSize = 5;
     [SerializeField] private Color brushColor = Color.black;
-    [SerializeField] private List<GameObject> obstacles;
+    [SerializeField] private List<GameObject> walls;
+    /*[SerializeField]*/ private List<GameObject> obstacles = new List<GameObject>();
 
 
 
@@ -24,8 +25,9 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
 
     private int textureWidth = 800;
     private int textureHeight = 800;
-
+    private int wallIndex = 0;
     private float wallDrawnPercentage;
+
     public static bool ableToPaint;
 
     private void Start()
@@ -42,7 +44,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         mainCamera = Camera.main;
 
         Cursor.SetCursor(mouseCursor, Vector2.zero, CursorMode.Auto);
-
+        populateObstacles();
         DrawObstaclesOnTexture();
     }
 
@@ -105,6 +107,7 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         if (Input.GetKeyDown(KeyCode.Space))
         {
             submitWall();
+            nextWall();
         }
     }
 
@@ -126,6 +129,27 @@ public class PaintingController : MonoBehaviour, IPointerDownHandler, IDragHandl
         wallDrawnPercentage = GetPercentageDrawn();
         scoring.updateScore(wallDrawnPercentage);
     }
+    public void nextWall()
+	{
+        if(wallIndex == walls.Count - 1)
+		{
+            GameObject.FindGameObjectWithTag("Game Controller").GetComponent<GameController>().endGame();
+            return;
+		}
+        walls[wallIndex].SetActive(false);
+        wallIndex++;
+        walls[wallIndex].SetActive(true);
+        populateObstacles();
+        //TODO: Erase old obstacles and paint, then draw the new obstacles on
+	}
+    public void populateObstacles()
+	{
+        obstacles.Clear();
+        foreach(Transform child in walls[wallIndex].transform)
+		{
+            obstacles.Add(child.gameObject);
+		}
+	}
     public float GetPercentageDrawn()
     {
         // this counts all pixels that are not white as drawn. in the
